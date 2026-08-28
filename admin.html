@@ -1,0 +1,214 @@
+ <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Vows & Veils</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOk11TIh_fXKsaBfPw_hijQvP50_KMQ4E",
+      authDomain: "vows-veils-digital.firebaseapp.com",
+      projectId: "vows-veils-digital",
+      storageBucket: "vows-veils-digital.firebasestorage.app",
+      messagingSenderId: "84580190584",
+      appId: "1:84580190584:web:0ae6f0d125bfaa88bd608d"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function App() {
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      const [password, setPassword] = useState("");
+      const PIN_RAHASIA = "admin123"; 
+
+      const [clientId, setClientId] = useState("");
+      const [formData, setFormData] = useState({
+        tema_desain: "classic-gold", // Nilai default tema
+        nama_pria: "",
+        nama_wanita: "",
+        tanggal_acara: "",
+        waktu_akad: "",
+        waktu_resepsi: "",
+        lokasi: "",
+        link_map: "",
+        bank_nama: "",
+        bank_rekening: "",
+        bank_atasnama: ""
+      });
+
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const [message, setMessage] = useState({ type: "", text: "" });
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (password === PIN_RAHASIA) setIsLoggedIn(true);
+        else alert("PIN Salah!");
+      };
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!clientId.trim()) {
+            setMessage({ type: "error", text: "ID Klien (URL) wajib diisi!" });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setMessage({ type: "", text: "" });
+
+        try {
+          const formatId = clientId.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+          await db.collection("Invitations").doc(formatId).set(formData);
+          setMessage({ type: "success", text: `Sukses! Tautan klien aktif: ?id=${formatId}` });
+          
+          setClientId("");
+          setFormData({ tema_desain: "classic-gold", nama_pria: "", nama_wanita: "", tanggal_acara: "", waktu_akad: "", waktu_resepsi: "", lokasi: "", link_map: "", bank_nama: "", bank_rekening: "", bank_atasnama: "" });
+        } catch (error) {
+          setMessage({ type: "error", text: "Gagal menyimpan data ke database." });
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+
+      if (!isLoggedIn) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-6">
+            <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 fade-in">
+              <div className="text-4xl mb-4">🔒</div>
+              <h1 className="text-xl font-bold mb-2">Akses Terbatas</h1>
+              <p className="text-sm text-slate-400 mb-6">Masukkan PIN Admin Vows & Veils</p>
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none text-center tracking-[0.3em] font-bold" placeholder="••••••••" required />
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg">Masuk Sistem</button>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen p-4 md:p-8 pb-20 fade-in">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-8 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+              <div>
+                <h1 className="text-2xl font-bold text-blue-400">Dashboard Admin</h1>
+                <p className="text-xs text-slate-400">Buat Undangan Klien Baru</p>
+              </div>
+              <button onClick={() => setIsLoggedIn(false)} className="text-xs bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition">Keluar</button>
+            </div>
+
+            {message.text && (
+              <div className={`p-4 rounded-xl mb-6 font-bold border ${message.type === 'success' ? 'bg-green-900/30 text-green-400 border-green-500/50' : 'bg-red-900/30 text-red-400 border-red-500/50'}`}>
+                {message.text}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-6">
+              
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">ID Klien (Untuk Tautan)</label>
+                  <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="contoh: budi-siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                
+                {/* FITUR BARU: Pemilihan Tema */}
+                <div>
+                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wide mb-2">Pilih Tema Desain</label>
+                  <select name="tema_desain" value={formData.tema_desain} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-amber-600/50 focus:border-amber-500 focus:outline-none text-white appearance-none">
+                    <option value="classic-gold">Classic Gold (Premium)</option>
+                    <option value="rustic-floral">Rustic Floral (Hijau/Bunga)</option>
+                    <option value="minimalist-white">Minimalist White (Putih Bersih)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Pria</label>
+                  <input type="text" name="nama_pria" value={formData.nama_pria} onChange={handleInputChange} placeholder="Budi" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Wanita</label>
+                  <input type="text" name="nama_wanita" value={formData.nama_wanita} onChange={handleInputChange} placeholder="Siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Tanggal Acara</label>
+                  <input type="text" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} placeholder="Minggu, 20 Agustus 2026" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Waktu Akad</label>
+                  <input type="text" name="waktu_akad" value={formData.waktu_akad} onChange={handleInputChange} placeholder="08:00 - 10:00 WIB" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Waktu Resepsi</label>
+                  <input type="text" name="waktu_resepsi" value={formData.waktu_resepsi} onChange={handleInputChange} placeholder="11:00 - Selesai" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Lokasi (Teks)</label>
+                  <input type="text" name="lokasi" value={formData.lokasi} onChange={handleInputChange} placeholder="Gedung Sabuga, Bandung" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Link Google Maps</label>
+                  <input type="text" name="link_map" value={formData.link_map} onChange={handleInputChange} placeholder="https://maps.app.goo.gl/..." className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+              </div>
+
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Bank</label>
+                  <input type="text" name="bank_nama" value={formData.bank_nama} onChange={handleInputChange} placeholder="BCA / Mandiri" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">No. Rekening</label>
+                  <input type="text" name="bank_rekening" value={formData.bank_rekening} onChange={handleInputChange} placeholder="123456789" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Atas Nama</label>
+                  <input type="text" name="bank_atasnama" value={formData.bank_atasnama} onChange={handleInputChange} placeholder="Budi Santoso" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                </div>
+              </div>
+
+              <button type="submit" disabled={isSubmitting} className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition shadow-lg ${isSubmitting ? 'bg-slate-600 text-slate-400' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/50'}`}>
+                {isSubmitting ? 'Memproses Database...' : '🚀 Buat Undangan Klien'}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
