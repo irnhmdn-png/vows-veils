@@ -1,0 +1,307 @@
+ <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vows & Veils - Undangan Digital Premium</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+    .font-latin { font-family: 'Great Vibes', cursive; }
+    .font-klasik { font-family: 'Playfair Display', serif; }
+    
+    .fade-in { animation: fadeIn 1.5s ease-in-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .spin-slow { animation: spin 4s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- INISIALISASI FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOk11TIh_fXKsaBfPw_hijQvP50_KMQ4E",
+      authDomain: "vows-veils-digital.firebaseapp.com",
+      projectId: "vows-veils-digital",
+      storageBucket: "vows-veils-digital.firebasestorage.app",
+      messagingSenderId: "84580190584",
+      appId: "1:84580190584:web:0ae6f0d125bfaa88bd608d"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ==========================================
+    // 1. KOMPONEN HALAMAN KATALOG (ETALASE BISNIS)
+    // ==========================================
+    function HalamanKatalog() {
+      // Data dummy untuk contoh template yang Anda jual
+      const daftarTemplate = [
+        { id: "dimas-ayu", nama: "Classic Gold (Premium)", gambar: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", harga: "Rp 150.000" },
+        { id: "demo-floral", nama: "Rustic Floral", gambar: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", harga: "Rp 120.000" },
+        { id: "demo-minimalis", nama: "Minimalist White", gambar: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", harga: "Rp 99.000" }
+      ];
+
+      return (
+        <div className="min-h-screen bg-[#0f0f0f] text-white font-klasik pb-20">
+          {/* Header */}
+          <div className="pt-12 pb-16 text-center border-b border-white/10 px-6">
+            <h1 className="text-4xl font-latin text-[#d4af37] mb-2">Vows & Veils</h1>
+            <p className="text-sm tracking-widest uppercase text-white/50">Digital Invitation Platform</p>
+          </div>
+
+          {/* Hero Section */}
+          <div className="max-w-2xl mx-auto text-center px-6 mt-12 mb-16 fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">Buat Undangan Pernikahan Mewah dalam Hitungan Menit.</h2>
+            <p className="text-white/60 mb-8 leading-relaxed">Pilih desain premium, isi data, dan sebarkan undangan Anda dengan mudah tanpa batas revisi.</p>
+          </div>
+
+          {/* Galeri Katalog */}
+          <div className="max-w-4xl mx-auto px-6">
+            <h3 className="text-xl mb-8 border-l-4 border-[#d4af37] pl-4">Katalog Desain Premium</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {daftarTemplate.map((item, index) => (
+                <div key={index} className="bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/10 group hover:border-[#d4af37]/50 transition duration-300">
+                  <div className="h-64 overflow-hidden relative">
+                    <img src={item.gambar} alt={item.nama} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                    <div className="absolute top-4 right-4 bg-black/70 backdrop-blur px-3 py-1 rounded-full text-xs text-[#d4af37] border border-[#d4af37]/30">
+                      {item.harga}
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h4 className="text-lg font-bold mb-2">{item.nama}</h4>
+                    <p className="text-xs text-white/50 mb-6">Efek kaca elegan dengan pemutar musik terintegrasi.</p>
+                    
+                    {/* Tombol ini akan menambahkan parameter ?id=... di URL */}
+                    <a href={`?id=${item.id}`} className="block w-full py-3 bg-[#d4af37]/10 text-[#d4af37] text-center rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-[#d4af37] hover:text-black transition">
+                      Lihat Demo
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+
+    // ==========================================
+    // 2. KOMPONEN MESIN UNDANGAN (UNTUK KLIEN/TAMU)
+    // ==========================================
+    function HalamanUndangan({ clientId }) {
+      const [loading, setLoading] = useState(true);
+      const [dataKlien, setDataKlien] = useState(null);
+      const [isOpened, setIsOpened] = useState(false);
+      const [namaTamuURL, setNamaTamuURL] = useState("Tamu Undangan");
+      const [isPlaying, setIsPlaying] = useState(false);
+      const audioRef = useRef(null);
+
+      const [namaTamu, setNamaTamu] = useState("");
+      const [statusHadir, setStatusHadir] = useState("Hadir");
+      const [pesanRSVP, setPesanRSVP] = useState("");
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const [isSuccess, setIsSuccess] = useState(false);
+
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tamu = urlParams.get('kpd');
+        if (tamu) {
+            setNamaTamuURL(tamu);
+            setNamaTamu(tamu);
+        }
+
+        async function tarikData() {
+          try {
+            const docRef = db.collection("Invitations").doc(clientId);
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+              setDataKlien(docSnap.data());
+            }
+          } catch (err) {
+            console.log(err);
+          } finally {
+            setLoading(false);
+          }
+        }
+        tarikData();
+        
+        audioRef.current = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+        audioRef.current.loop = true;
+      }, [clientId]);
+
+      const bukaUndangan = () => {
+        setIsOpened(true);
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.log("Auto-play diblokir browser"));
+      };
+
+      const toggleMusik = () => {
+        if (isPlaying) audioRef.current.pause();
+        else audioRef.current.play();
+        setIsPlaying(!isPlaying);
+      };
+
+      const kirimRSVP = async (e) => {
+        e.preventDefault(); 
+        if (!namaTamu.trim()) return alert("Mohon isi nama Anda!");
+        setIsSubmitting(true);
+        try {
+          await db.collection(`RSVP_${clientId}`).add({
+            nama: namaTamu, status: statusHadir, pesan: pesanRSVP, waktu_kirim: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          setIsSuccess(true);
+        } catch (err) {
+          alert("Gagal mengirim.");
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+
+      if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-white"><p className="font-klasik italic animate-pulse">Memuat Momen Indah...</p></div>;
+      
+      // Jika data tidak ada di database
+      if (!dataKlien) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+          <p className="font-klasik text-xl mb-4 text-[#d4af37]">Undangan Tidak Ditemukan</p>
+          <a href="/" className="text-xs tracking-widest uppercase text-white/50 hover:text-white border-b border-white/50 pb-1">Kembali ke Katalog</a>
+        </div>
+      );
+
+      // --- HALAMAN ISI UNDANGAN ---
+      if (isOpened) {
+        return (
+          <div className="min-h-screen bg-fixed bg-cover bg-center text-slate-800 pb-24 fade-in relative" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1469371670807-013ccf25f16a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80')" }}>
+            <div className="absolute inset-0 bg-[#fdfbf7]/90 z-0 fixed"></div>
+            <div className="relative z-10 max-w-md mx-auto p-6 pt-12">
+              
+              <div className="text-center mb-16">
+                <p className="font-klasik italic text-sm text-slate-500 mb-6 px-4 leading-relaxed">
+                  "Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri..."
+                </p>
+                <h2 className="text-5xl font-latin text-[#b89551] mb-2">{dataKlien.nama_pria} & {dataKlien.nama_wanita}</h2>
+                <div className="w-20 h-[1px] bg-[#d4af37] mx-auto"></div>
+              </div>
+
+              <div className="glass-card rounded-[2rem] shadow-xl shadow-[#d4af37]/10 p-8 text-center mb-12">
+                <p className="text-xs text-[#b89551] uppercase tracking-widest font-klasik font-bold mb-4">Mempelai Pria</p>
+                <h3 className="text-4xl font-latin mb-2">{dataKlien.nama_pria}</h3>
+                <p className="text-sm font-klasik text-slate-600 mb-8 italic">Putra pertama dari Bpk. Fulan & Ibu Fulanah</p>
+                <div className="text-3xl text-[#d4af37] mb-8 font-latin">&</div>
+                <p className="text-xs text-[#b89551] uppercase tracking-widest font-klasik font-bold mb-4">Mempelai Wanita</p>
+                <h3 className="text-4xl font-latin mb-2">{dataKlien.nama_wanita}</h3>
+                <p className="text-sm font-klasik text-slate-600 italic">Putri kedua dari Bpk. Fulan & Ibu Fulanah</p>
+              </div>
+
+              <div className="bg-[#1a1a1a] text-[#fdfbf7] rounded-[2rem] shadow-2xl p-8 text-center mb-12 border border-[#d4af37]/30">
+                <h3 className="text-3xl font-latin text-[#d4af37] mb-8">Jadwal Acara</h3>
+                <div className="mb-6">
+                  <p className="text-xs font-klasik tracking-[0.2em] uppercase mb-2 text-[#b89551]">Akad Nikah</p>
+                  <p className="text-lg font-klasik">{dataKlien.waktu_akad || '08:00 - 10:00 WIB'}</p>
+                </div>
+                <div className="w-12 h-[1px] bg-white/20 mx-auto mb-6"></div>
+                <div className="mb-8">
+                  <p className="text-xs font-klasik tracking-[0.2em] uppercase mb-2 text-[#b89551]">Resepsi</p>
+                  <p className="text-lg font-klasik">{dataKlien.waktu_resepsi || '11:00 - Selesai'}</p>
+                </div>
+                <div className="mb-8 font-klasik">
+                  <p className="text-sm mb-4 leading-relaxed">{dataKlien.lokasi}</p>
+                  <a href={dataKlien.link_map || '#'} target="_blank" className="inline-block bg-[#d4af37] text-white px-6 py-2 rounded-full text-xs tracking-widest uppercase transition hover:bg-[#b89551]">
+                    Buka Google Maps
+                  </a>
+                </div>
+              </div>
+
+              <div className="glass-card rounded-[2rem] shadow-xl p-8 border border-white/50">
+                <h3 className="text-3xl font-latin text-center text-[#b89551] mb-6">Kehadiran</h3>
+                {isSuccess ? (
+                  <div className="bg-[#d4af37]/10 text-[#8b7355] p-6 rounded-2xl text-center border border-[#d4af37]/30 font-klasik">
+                    <p className="text-lg italic mb-2">Terima kasih!</p>
+                    <p className="text-sm">Konfirmasi Anda telah kami terima.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={kirimRSVP} className="flex flex-col gap-4 font-klasik">
+                    <input type="text" value={namaTamu} onChange={(e) => setNamaTamu(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[#d4af37]/30 bg-white/50 focus:outline-none focus:border-[#d4af37] transition text-sm" placeholder="Nama Anda" required />
+                    <select value={statusHadir} onChange={(e) => setStatusHadir(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[#d4af37]/30 bg-white/50 focus:outline-none focus:border-[#d4af37] transition text-sm appearance-none">
+                      <option value="Hadir">Ya, Saya Hadir</option>
+                      <option value="Tidak Hadir">Maaf, Tidak Hadir</option>
+                    </select>
+                    <textarea value={pesanRSVP} onChange={(e) => setPesanRSVP(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[#d4af37]/30 bg-white/50 focus:outline-none focus:border-[#d4af37] transition h-24 resize-none text-sm" placeholder="Berikan ucapan doa restu..."></textarea>
+                    <button type="submit" disabled={isSubmitting} className={`mt-2 py-3 rounded-full text-white tracking-widest text-xs uppercase transition ${isSubmitting ? 'bg-slate-400' : 'bg-[#1a1a1a] hover:bg-black shadow-lg shadow-black/20'}`}>
+                      {isSubmitting ? 'Mengirim...' : 'Kirim Konfirmasi'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            <button onClick={toggleMusik} className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-white rounded-full shadow-2xl flex items-center justify-center border border-[#d4af37]/30">
+              <div className={`text-xl ${isPlaying ? 'spin-slow' : ''}`}>💿</div>
+            </button>
+          </div>
+        );
+      }
+
+      // --- HALAMAN SAMPUL ---
+      return (
+        <div className="min-h-screen bg-cover bg-center flex flex-col items-center justify-center p-6 text-center relative overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80')" }}>
+          <div className="absolute inset-0 bg-black/60 z-0"></div>
+          <div className="relative z-10 flex flex-col items-center w-full max-w-sm border border-white/30 p-8 rounded-2xl backdrop-blur-sm bg-white/5 shadow-2xl">
+            <p className="text-white/80 font-klasik text-sm tracking-[0.2em] uppercase mb-4">Pernikahan Dari</p>
+            <h1 className="text-6xl font-latin text-white mb-6 drop-shadow-md">{dataKlien.nama_pria} <span className="text-[#d4af37]">&amp;</span> {dataKlien.nama_wanita}</h1>
+            <div className="w-16 h-[1px] bg-[#d4af37] mb-8"></div>
+            <div className="mb-8">
+              <p className="text-white/70 text-sm font-klasik mb-2">Kepada Yth.</p>
+              <p className="text-xl font-bold font-klasik text-white bg-black/40 px-6 py-2 rounded-lg border border-white/20">{namaTamuURL}</p>
+            </div>
+            <button onClick={bukaUndangan} className="bg-[#d4af37] hover:bg-[#c5a028] text-white font-klasik px-8 py-3 rounded-full text-sm transition shadow-lg shadow-[#d4af37]/40 flex items-center gap-2">
+              Buka Undangan
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 3. PINTU UTAMA (APP ROUTER)
+    // ==========================================
+    function App() {
+      // Membaca URL di browser. Apakah ada "?id=..." ?
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientId = urlParams.get('id');
+
+      // Jika ada ID Klien, buka Undangan. Jika tidak, buka Katalog.
+      if (clientId) {
+        return <HalamanUndangan clientId={clientId} />;
+      } else {
+        return <HalamanKatalog />;
+      }
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
