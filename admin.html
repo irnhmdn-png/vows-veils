@@ -45,8 +45,9 @@
       const PIN_RAHASIA = "admin123"; 
 
       const [clientId, setClientId] = useState("");
+      
       const [formData, setFormData] = useState({
-        tema_desain: "classic-gold", // Nilai default tema
+        tema_desain: "classic-gold", 
         nama_pria: "",
         nama_wanita: "",
         tanggal_acara: "",
@@ -56,8 +57,12 @@
         link_map: "",
         bank_nama: "",
         bank_rekening: "",
-        bank_atasnama: ""
+        bank_atasnama: "",
+        foto_sampul: ""
       });
+
+      // FITUR BARU: State khusus untuk Galeri Unlimited (Array)
+      const [fotoGaleri, setFotoGaleri] = useState(["", ""]);
 
       const [isSubmitting, setIsSubmitting] = useState(false);
       const [message, setMessage] = useState({ type: "", text: "" });
@@ -73,11 +78,26 @@
         setFormData({ ...formData, [name]: value });
       };
 
+      // FUNGSI BARU: Mengelola input Galeri yang dinamis
+      const handleGaleriChange = (index, value) => {
+        const newGaleri = [...fotoGaleri];
+        newGaleri[index] = value;
+        setFotoGaleri(newGaleri);
+      };
+
+      const tambahInputGaleri = () => {
+        setFotoGaleri([...fotoGaleri, ""]);
+      };
+
+      const hapusInputGaleri = (index) => {
+        const newGaleri = fotoGaleri.filter((_, i) => i !== index);
+        setFotoGaleri(newGaleri);
+      };
+
       const handleSubmit = async (e) => {
         e.preventDefault();
         if (!clientId.trim()) {
-            setMessage({ type: "error", text: "ID Klien (URL) wajib diisi!" });
-            return;
+            setMessage({ type: "error", text: "ID Klien wajib diisi!" }); return;
         }
 
         setIsSubmitting(true);
@@ -85,13 +105,25 @@
 
         try {
           const formatId = clientId.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-          await db.collection("Invitations").doc(formatId).set(formData);
+          
+          // Membersihkan array galeri dari input yang kosong sebelum disimpan
+          const galeriBersih = fotoGaleri.filter(url => url.trim() !== "");
+          
+          // Menggabungkan data teks dan array galeri
+          const finalData = {
+            ...formData,
+            foto_galeri: galeriBersih
+          };
+
+          await db.collection("Invitations").doc(formatId).set(finalData);
           setMessage({ type: "success", text: `Sukses! Tautan klien aktif: ?id=${formatId}` });
           
+          // Reset Form
           setClientId("");
-          setFormData({ tema_desain: "classic-gold", nama_pria: "", nama_wanita: "", tanggal_acara: "", waktu_akad: "", waktu_resepsi: "", lokasi: "", link_map: "", bank_nama: "", bank_rekening: "", bank_atasnama: "" });
+          setFormData({ tema_desain: "classic-gold", nama_pria: "", nama_wanita: "", tanggal_acara: "", waktu_akad: "", waktu_resepsi: "", lokasi: "", link_map: "", bank_nama: "", bank_rekening: "", bank_atasnama: "", foto_sampul: "" });
+          setFotoGaleri(["", ""]);
         } catch (error) {
-          setMessage({ type: "error", text: "Gagal menyimpan data ke database." });
+          setMessage({ type: "error", text: "Gagal menyimpan data." });
         } finally {
           setIsSubmitting(false);
         }
@@ -103,10 +135,9 @@
             <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 fade-in">
               <div className="text-4xl mb-4">🔒</div>
               <h1 className="text-xl font-bold mb-2">Akses Terbatas</h1>
-              <p className="text-sm text-slate-400 mb-6">Masukkan PIN Admin Vows & Veils</p>
-              <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none text-center tracking-[0.3em] font-bold" placeholder="••••••••" required />
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg">Masuk Sistem</button>
+              <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 text-center tracking-[0.3em] font-bold" placeholder="******" required />
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl">Masuk Sistem</button>
               </form>
             </div>
           </div>
@@ -121,30 +152,26 @@
                 <h1 className="text-2xl font-bold text-blue-400">Dashboard Admin</h1>
                 <p className="text-xs text-slate-400">Buat Undangan Klien Baru</p>
               </div>
-              <button onClick={() => setIsLoggedIn(false)} className="text-xs bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition">Keluar</button>
+              <button onClick={() => setIsLoggedIn(false)} className="text-xs bg-slate-700 px-4 py-2 rounded-lg">Keluar</button>
             </div>
 
             {message.text && (
-              <div className={`p-4 rounded-xl mb-6 font-bold border ${message.type === 'success' ? 'bg-green-900/30 text-green-400 border-green-500/50' : 'bg-red-900/30 text-red-400 border-red-500/50'}`}>
-                {message.text}
-              </div>
+              <div className={`p-4 rounded-xl mb-6 font-bold border ${message.type === 'success' ? 'bg-green-900/30 text-green-400 border-green-500/50' : 'bg-red-900/30 text-red-400 border-red-500/50'}`}>{message.text}</div>
             )}
 
             <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-6">
               
               <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">ID Klien (Untuk Tautan)</label>
-                  <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="contoh: budi-siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">ID Klien (URL)</label>
+                  <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="contoh: budi-siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
-                
-                {/* FITUR BARU: Pemilihan Tema */}
                 <div>
-                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wide mb-2">Pilih Tema Desain</label>
-                  <select name="tema_desain" value={formData.tema_desain} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-amber-600/50 focus:border-amber-500 focus:outline-none text-white appearance-none">
+                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wide mb-2">Pilih Tema</label>
+                  <select name="tema_desain" value={formData.tema_desain} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-amber-600/50 text-white">
                     <option value="classic-gold">Classic Gold (Premium)</option>
-                    <option value="rustic-floral">Rustic Floral (Hijau/Bunga)</option>
-                    <option value="minimalist-white">Minimalist White (Putih Bersih)</option>
+                    <option value="rustic-floral">Rustic Floral (Hijau)</option>
+                    <option value="minimalist-white">Minimalist White</option>
                   </select>
                 </div>
               </div>
@@ -152,54 +179,90 @@
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Pria</label>
-                  <input type="text" name="nama_pria" value={formData.nama_pria} onChange={handleInputChange} placeholder="Budi" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <input type="text" name="nama_pria" value={formData.nama_pria} onChange={handleInputChange} placeholder="Budi" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Wanita</label>
-                  <input type="text" name="nama_wanita" value={formData.nama_wanita} onChange={handleInputChange} placeholder="Siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <input type="text" name="nama_wanita" value={formData.nama_wanita} onChange={handleInputChange} placeholder="Siti" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Tanggal Acara</label>
-                  <input type="text" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} placeholder="Minggu, 20 Agustus 2026" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Tanggal Acara</label>
+                  <input type="text" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Waktu Akad</label>
-                  <input type="text" name="waktu_akad" value={formData.waktu_akad} onChange={handleInputChange} placeholder="08:00 - 10:00 WIB" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Waktu Akad</label>
+                  <input type="text" name="waktu_akad" value={formData.waktu_akad} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Waktu Resepsi</label>
-                  <input type="text" name="waktu_resepsi" value={formData.waktu_resepsi} onChange={handleInputChange} placeholder="11:00 - Selesai" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Waktu Resepsi</label>
+                  <input type="text" name="waktu_resepsi" value={formData.waktu_resepsi} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Lokasi (Teks)</label>
-                  <input type="text" name="lokasi" value={formData.lokasi} onChange={handleInputChange} placeholder="Gedung Sabuga, Bandung" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Lokasi Acara</label>
+                  <input type="text" name="lokasi" value={formData.lokasi} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Link Google Maps</label>
-                  <input type="text" name="link_map" value={formData.link_map} onChange={handleInputChange} placeholder="https://maps.app.goo.gl/..." className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Link Google Maps</label>
+                  <input type="text" name="link_map" value={formData.link_map} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
               </div>
 
               <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Nama Bank</label>
-                  <input type="text" name="bank_nama" value={formData.bank_nama} onChange={handleInputChange} placeholder="BCA / Mandiri" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Nama Bank</label>
+                  <input type="text" name="bank_nama" value={formData.bank_nama} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">No. Rekening</label>
-                  <input type="text" name="bank_rekening" value={formData.bank_rekening} onChange={handleInputChange} placeholder="123456789" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">No. Rekening</label>
+                  <input type="text" name="bank_rekening" value={formData.bank_rekening} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Atas Nama</label>
-                  <input type="text" name="bank_atasnama" value={formData.bank_atasnama} onChange={handleInputChange} placeholder="Budi Santoso" className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Atas Nama</label>
+                  <input type="text" name="bank_atasnama" value={formData.bank_atasnama} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" required />
                 </div>
               </div>
 
-              <button type="submit" disabled={isSubmitting} className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition shadow-lg ${isSubmitting ? 'bg-slate-600 text-slate-400' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/50'}`}>
-                {isSubmitting ? 'Memproses Database...' : '🚀 Buat Undangan Klien'}
+              {/* FITUR UNLIMITED GALERI */}
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-pink-500/30 grid grid-cols-1 gap-4">
+                <h3 className="text-pink-400 font-bold text-sm border-b border-pink-500/30 pb-2 mb-2">Data Visual (Tautan URL Foto)</h3>
+                
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">1. Link Foto Sampul (Wajib)</label>
+                  <input type="text" name="foto_sampul" value={formData.foto_sampul} onChange={handleInputChange} placeholder="https://..." className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white" />
+                </div>
+                
+                <div className="mt-4 border-t border-slate-700 pt-4">
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">2. Galeri Foto (Tidak Terbatas)</label>
+                  <p className="text-xs text-slate-500 mb-4">Tambahkan sebanyak apapun foto pre-wedding klien.</p>
+                  
+                  {fotoGaleri.map((url, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <input 
+                        type="text" 
+                        value={url} 
+                        onChange={(e) => handleGaleriChange(index, e.target.value)} 
+                        placeholder={`Link Foto Galeri ${index + 1}`} 
+                        className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white text-sm" 
+                      />
+                      {fotoGaleri.length > 1 && (
+                        <button type="button" onClick={() => hapusInputGaleri(index)} className="bg-red-900/50 hover:bg-red-600 text-red-200 px-4 rounded-lg transition border border-red-500/30">
+                          X
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  <button type="button" onClick={tambahInputGaleri} className="mt-2 w-full py-3 border border-dashed border-pink-500/50 text-pink-400 rounded-lg text-sm font-bold hover:bg-pink-900/20 transition">
+                    + Tambah Foto Galeri
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" disabled={isSubmitting} className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition shadow-lg ${isSubmitting ? 'bg-slate-600' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/50'}`}>
+                {isSubmitting ? 'Memproses...' : '🚀 Buat Undangan Klien'}
               </button>
             </form>
           </div>
